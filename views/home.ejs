@@ -1,5 +1,4 @@
-
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
@@ -48,15 +47,13 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="../server/routes/homeRouter.js" type="text/javascript"></script>
   </head>
-  <body>
+  <body id="body">
 
    <!--  <nav class="navbar navbar-light bg-white"> -->
     <nav class="navbar navbar-expand-sm bg-light navbar-light">
       <a href="/home" class="navbar-brand" style="color: #1c94e6">Twitter-Clone</a>
-      <a href="/home" class="navbar-brand">Home</a>
-      <a href="/profile" class="navbar-brand">Profile</a>
       <form class="form-inline" action="/home" method="GET">
-        <div class="input-group">
+        <div class="input-group"  style="margin-left:340px">
           <input
             name = "search"
             type="text"
@@ -75,9 +72,10 @@
           </div>
         </div>
       </form>
-     
+      <a href="/home" class="btn btn-primary" style="margin-left:300px; margin-right:5px;">Home</a>
+      <a href="/profile" class="btn btn-primary"style="margin-right:5px;">Profile</a>
       <!-- Button trigger modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop" style="margin-left:550px;">
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop" style="margin-right:5px;">
   Help
 </button>
 
@@ -113,7 +111,7 @@
 </div>
 
 <!--model help end-->
-      <a  href="/login" class="btn btn-warning" style="margin-left: auto;">Log Out</a>
+      <a  href="/login" class="btn btn-warning" style="margin-right: auto;">Log Out</a>
         
       
       
@@ -269,13 +267,23 @@
               </p>
             </div>
             <div class="card-footer">
-              <a href="/home/like?tweet_id=<%=tweets[i].tweet_id%>" class="card-link"
+              <a href="/home/like?tweet_id=<%=tweets[i].tweet_id%>" id="like<%=tweets[i].tweet_id%>" class="card-link" style="margin-right:30px;"
                 ><i class="fa fa-gittip">Like</i></a>
+
+              <% for (var k = 0; k < likes.length;  k++){ %>
+                <% if (tweets[i].tweet_id == likes[k]){%>
+                <script>
+                  var like = document.getElementById("like<%=tweets[i].tweet_id%>");
+                  like.innerHTML = "<i class='fa fa-gittip'>Liked</i></a>"
+                </script>
+                <%break;}%>  
+              <%}%>
               <!-- <a href="/home/comment?tweet_id=<%=tweets[i].tweet_id%>" class="card-link"
                 ><i class="fa fa-comment">Comment</i></a> -->
-                           <form action="/home/storeComment" method="GET">
-                            <div class="dropdown" >
-                              <a class="dropdown-toggle" class="card-link" type="button" data-toggle="dropdown" style="background-color: transparent; border-color: transparent; color: #1c94e6"><i class="fa fa-comment">Comments</i></a>
+                           <form action="/home/storeComment" method="GET" style="display:inline">
+                            <div class="dropdown" style="display:inline">
+                              <a class="dropdown-toggle" class="card-link" type="button" data-toggle="dropdown" style="background-color: transparent; border-color: transparent; color: #1c94e6">
+                                <i class="fa fa-comment">Comments</i></a>
                               <ul class="dropdown-menu" style="width: 500px; max-height: 300px; overflow: scroll;">
                                      <li style="margin: 10px">                         
                                         <% for (var j = 0; j < comments.length;  j++){ %>
@@ -312,7 +320,7 @@
                                     </div>  
                                     </from>                        
       
-             <a href="/home/retweet?tweet_id=<%=tweets[i].tweet_id%>&tweetText=<%=tweets[i].text%>" class="card-link"><i class="fa fa-mail-forward">Retweet</i></a>
+             <a href="/home/retweet?tweet_id=<%=tweets[i].tweet_id%>&tweetText=<%=tweets[i].text%>" class="card-link" style="margin-left:30px;"><i class="fa fa-mail-forward">Retweet</i></a>
              </div>
            </div>
           <% } %>
