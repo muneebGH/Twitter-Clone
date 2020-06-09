@@ -56,7 +56,18 @@ function doLike(req, res, uid) {
         } else {
           console.log(result1.length);
           if (result1.length !== 0) {
-            res.redirect("/home");
+            conn.query(
+              "delete from likes where user_id="+uid+" and tweet_id="+req.query.tweet_id,
+              function (queryError, result1) {
+                if (queryError) {
+                  console.log(queryError);
+                  res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
+                } else {
+                  console.log("here");
+                  res.redirect("/home");
+                }
+              }
+            );
           } else {
             conn.query(
               "insert into likes (user_id, tweet_id, timeStamp) values(" +
@@ -174,7 +185,7 @@ function displayHome(req, res, uid, search) {
               );
             } else {
               conn.query(
-                "select t.tweet_id, t.timeStamp, t.tweetText, u.username, u.fullname from twitter_clone.tweet as t, twitter_clone.users as u where t.tweet_id = ANY (select tweet_id from (SELECT tweet_id, count(tweet_id) FROM twitter_clone.likes group by tweet_id order by tweet_id desc limit 3) as ids) AND t.user_id = u.user_id;",
+                "select t.tweet_id, t.timeStamp, t.tweetText, u.username, u.fullname from twitter_clone.tweet as t, twitter_clone.users as u where t.tweet_id = ANY (select tweet_id from (SELECT tweet_id, count(tweet_id) as likesCount FROM twitter_clone.likes group by tweet_id order by likesCount desc limit 3) as ids) AND t.user_id = u.user_id;",
                 function (queryError, result3) {
                   if (queryError) {
                     res.sendFile(
@@ -207,72 +218,89 @@ function displayHome(req, res, uid, search) {
                                 path.resolve(__dirname + "/../../ui/500.html")
                               );
                             } else {
-                              var userDetails = {
-                                name: result1[0].username,
-                                desc: result1[0].description,
-                                fullname: result1[0].fullname,
-                                followersCount: result2[0].count,
-                                followingsCount: result2[1].count,
-                                accountType: result1[0].account_Type,
-                              };
-                              var tweets = [];
-                              var comments = [];
-                              var trends = [];
-                              Object.keys(result5).forEach(function (key1) {
-                                var row1 = result5[key1];
-                                var comment = {
-                                  comTweetId: row1.tweet_id,
-                                  comUserId: row1.user_id,
-                                  comUserName: row1.username,
-                                  comText: row1.text,
-                                  comTime: row1.time,
-                                };
-                                comments.push(comment);
-                              }); //comments loop
+                                    conn.query(
+                                    //query6
+                                    "SELECT tweet_id FROM likes where user_id="+ uid,
+                                    function (queryError, result6) {
+                                      if (queryError) {
+                                        console.log(queryError);
+                                        res.sendFile(
+                                          path.resolve(__dirname + "/../../ui/500.html")
+                                        );
+                                      } else {
+                                      var userDetails = {
+                                        name: result1[0].username,
+                                        desc: result1[0].description,
+                                        fullname: result1[0].fullname,
+                                        followersCount: result2[0].count,
+                                        followingsCount: result2[1].count,
+                                        accountType: result1[0].account_Type,
+                                      };
+                                      var tweets = [];
+                                      var comments = [];
+                                      var trends = [];
+                                      var likes = [];
 
-                              Object.keys(result4).forEach(function (key) {
-                                var row = result4[key];
-                                var tweet = {
-                                  tweet_id: row.tweet_id,
-                                  username: row.username,
-                                  fullname: row.fullname,
-                                  time: row.timeStamp,
-                                  text: row.tweetText,
-                                };
-                                tweets.push(tweet);
-                              }); //tweets loop
-                              Object.keys(result3).forEach(function (key2) {
-                                var row2 = result3[key2];
-                                var trend = {
-                                  tweet_id: row2.tweet_id,
-                                  username: row2.username,
-                                  fullname: row2.fullname,
-                                  time: row2.timeStamp,
-                                  text: row2.tweetText,
-                                };
-                                trends.push(trend);
-                              }); //trends loop
-                              console.log(trends);
-                              res.render(
-                                path.resolve(__dirname + "/../../views/home"),
-                                {
-                                  userDetails: userDetails,
-                                  comments: comments,
-                                  tweets: tweets,
-                                  trends: trends,
-                                }
-                              );
+                                      Object.keys(result4).forEach(function (key) {
+                                        var row = result4[key];
+                                        var tweet = {
+                                          tweet_id: row.tweet_id,
+                                          username: row.username,
+                                          fullname: row.fullname,
+                                          time: row.timeStamp,
+                                          text: row.tweetText,
+                                        };
+                                        tweets.push(tweet);
+                                      }); //tweets loop
+
+                                      Object.keys(result5).forEach(function (key1) {
+                                        var row1 = result5[key1];
+                                        var comment = {
+                                          comTweetId: row1.tweet_id,
+                                          comUserId: row1.user_id,
+                                          comUserName: row1.username,
+                                          comText: row1.text,
+                                          comTime: row1.time,
+                                        };
+                                        comments.push(comment);
+                                      }); //comments loop
+
+                                      
+                                      Object.keys(result3).forEach(function (key2) {
+                                        var row2 = result3[key2];
+                                        var trend = {
+                                          tweet_id: row2.tweet_id,
+                                          username: row2.username,
+                                          fullname: row2.fullname,
+                                          time: row2.timeStamp,
+                                          text: row2.tweetText,
+                                        };
+                                        trends.push(trend);
+                                      }); //trends loop
+                                      Object.keys(result6).forEach(function (key3) {
+                                        likes.push(result6[key3].tweet_id);
+                                      }); //likes loop
+                                      console.log(likes);
+                                      res.render(
+                                        path.resolve(__dirname + "/../../views/home"),
+                                        {
+                                          userDetails: userDetails,
+                                          comments: comments,
+                                          tweets: tweets,
+                                          trends: trends,
+                                          likes:likes
+                                        }
+                                      );//render
+                                  }//else6
+                               });//query5
                             } //else5
-                          }
-                        ); //query
+                          }); //query5
                       } //else4
                     }); //query4
                   } //else3
-                }
-              ); //query3
+                }); //query3
             } //else2
-          }
-        ); //query2
+          }); //query2
       } //else1
     }); //query1
     conn.release();
