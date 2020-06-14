@@ -91,6 +91,63 @@ function doLike(req, res, uid) {
   });
 }
 
+
+function doFollow(req, res, uid) {
+  DBConfiguration.getConnection(function (err, conn) {
+    if (err) {
+      res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
+    }
+    conn.query(
+      "select * from follower where follower_user_id = " +
+        uid +
+        " and following_user_id = " +
+        req.query.following_user_id +
+        ";",
+      function (queryError, result1) {
+        if (queryError) {
+          console.log(queryError);
+          res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
+        } else {
+          console.log("I am here: "+req.query.following_user_id);
+          if (result1.length !== 0) {
+            conn.query(
+              "delete from follower where follower_user_id = " +
+               uid +
+              " and following_user_id = " +
+              req.query.following_user_id +
+              ";",
+              function (queryError, result1) {
+                if (queryError) {
+                  console.log(queryError);
+                  res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
+                } else {
+                  console.log("here");
+                  res.redirect("/home");
+                }
+              }
+            );
+          } else {
+            conn.query(
+              "insert into follower (follower_user_id, following_user_id) values(" +
+                uid +
+                "," +
+                req.query.following_user_id+");",
+              function (queryError, result1) {
+                if (queryError) {
+                  console.log(queryError);
+                  res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
+                } else {
+                  res.redirect("/home");
+                }
+              }
+            );
+          }
+        }
+      }
+    );
+  });
+}
+
 function doRetweet(req, res, uid) {
   console.log(req.query.tweetText);
   console.log(req.query.tweet_id);
@@ -173,11 +230,7 @@ function displayHome(req, res, uid, search) {
         res.sendFile(path.resolve(__dirname + "/../../ui/500.html"));
       } else {
         conn.query(
-          "select count(follower_user_id) as count from twitter_clone.follower where follower_user_id = " +
-            uid +
-            " union all select count(following_user_id) from twitter_clone.follower where following_user_id = " +
-            uid +
-            ";",
+          "SELECT f.follower_user_id as follower_id, u1.username as follower, f.following_user_id as following_id, u2.username as following FROM twitter_clone.follower as f, twitter_clone.users as u1, twitter_clone.users as u2  where (follower_user_id = "+ uid +" or following_user_id = "+ uid +") and u1.user_id=f.follower_user_id and u2.user_id=f.following_user_id;",
           function (queryError, result2) {
             if (queryError) {
               res.status.sendFile(
@@ -195,12 +248,12 @@ function displayHome(req, res, uid, search) {
                     var sql;
                     if (search === true) {
                       sql =
-                        "SELECT username, fullname, tweet_id, tweetText, timeStamp FROM twitter_clone.users, twitter_clone.tweet where twitter_clone.tweet.user_id = twitter_clone.users.user_id AND tweetText like ('%" +
+                        "SELECT u.user_id, u.username, u.fullname, t.tweet_id, t.tweetText, t.timeStamp FROM twitter_clone.users as u, twitter_clone.tweet as t where t.user_id = u.user_id AND t.tweetText like ('%" +
                         req.query.search +
                         "%') order by timeStamp desc";
                     } else {
                       sql =
-                        "SELECT username, fullname, tweet_id, tweetText, timeStamp FROM twitter_clone.users, twitter_clone.tweet where twitter_clone.tweet.user_id = twitter_clone.users.user_id order by timeStamp desc limit 100;";
+                        "SELECT u.user_id, u.username, u.fullname, t.tweet_id, t.tweetText, t.timeStamp FROM twitter_clone.users as u, twitter_clone.tweet as t where t.user_id = u.user_id order by timeStamp desc limit 100;";
                     }
                     conn.query(sql, function (queryError, result4) {
                       if (queryError) {
@@ -228,12 +281,36 @@ function displayHome(req, res, uid, search) {
                                           path.resolve(__dirname + "/../../ui/500.html")
                                         );
                                       } else {
+                                      var followers = 0;
+                                      var followings = 0;
+                                      var followerNames = [];
+                                      var followingNames = [];
+                                      Object.keys(result2).forEach(function (key0) {
+                                        var row0 = result2[key0];
+                                        if(row0.follower_id == uid){
+                                          followings++;
+                                          var following = {
+                                            id: row0.following_id,
+                                            name: row0.following
+                                          }
+                                          followingNames.push(following);
+                                        }
+                                        else{
+                                          followers++;
+                                          var follower = {
+                                            id: row0.follower_id,
+                                            name: row0.follower
+                                          }
+                                          followerNames.push(follower);
+                                        }
+                                      });
                                       var userDetails = {
+                                        user_id: result1[0].user_id,
                                         name: result1[0].username,
                                         desc: result1[0].description,
                                         fullname: result1[0].fullname,
-                                        followersCount: result2[0].count,
-                                        followingsCount: result2[1].count,
+                                        followersCount: followers,
+                                        followingsCount: followings,
                                         accountType: result1[0].account_Type,
                                       };
                                       var tweets = [];
@@ -244,6 +321,7 @@ function displayHome(req, res, uid, search) {
                                       Object.keys(result4).forEach(function (key) {
                                         var row = result4[key];
                                         var tweet = {
+                                          user_id: row.user_id,
                                           tweet_id: row.tweet_id,
                                           username: row.username,
                                           fullname: row.fullname,
@@ -280,7 +358,7 @@ function displayHome(req, res, uid, search) {
                                       Object.keys(result6).forEach(function (key3) {
                                         likes.push(result6[key3].tweet_id);
                                       }); //likes loop
-                                      console.log(likes);
+                                      //console.log(tweets);
                                       res.render(
                                         path.resolve(__dirname + "/../../views/home"),
                                         {
@@ -288,7 +366,9 @@ function displayHome(req, res, uid, search) {
                                           comments: comments,
                                           tweets: tweets,
                                           trends: trends,
-                                          likes:likes
+                                          likes:likes,
+                                          followers: followerNames,
+                                          followings: followingNames
                                         }
                                       );//render
                                   }//else6
@@ -313,4 +393,5 @@ module.exports = {
   doLike: doLike,
   storeComment: storeComment,
   doRetweet: doRetweet,
+  doFollow: doFollow,
 };

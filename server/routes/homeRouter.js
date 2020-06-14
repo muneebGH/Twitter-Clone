@@ -9,6 +9,10 @@ app.get("/like", (req, res) => {
   homeHandler.doLike(req, res, req.cookies.uid);
 });
 
+app.get("/follow", (req, res) => {
+  homeHandler.doFollow(req, res, req.cookies.uid);
+});
+
 app.get("/storeComment", (req, res) => {
   homeHandler.storeComment(req, res, req.cookies.uid);
 });
