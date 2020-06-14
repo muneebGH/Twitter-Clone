@@ -125,11 +125,43 @@
             </div>
             <ul class="list-group list-group-flush">
               <li class="list-group-item">
-                <div class="h6 text-muted">Followers</div>
+                <div class="dropdown">
+                   <a class="dropdown-toggle" class="card-link" type="button" data-toggle="dropdown" style="background-color: transparent; border-color: transparent; color: black">
+                  Followers</a>
+                <ul class="dropdown-menu" style="width: 300px; max-height: 300px; overflow: scroll;">
+                  <li style="margin: 10px">                         
+                    <% for (var q = 0; q < followers.length;  q++){ %>
+                         <a class="card-link" href="">
+                         <h6 class="card-title">
+                         <%=followers[q].name%>
+                         </h6>
+                         </a>
+                         <hr>                        
+                   <% } %>
+                   </li>                  
+                </ul>
+
+                </div>
                 <div class="h5"><%=userDetails.followersCount%></div>
               </li>
               <li class="list-group-item">
-                <div class="h6 text-muted">Following</div>
+                <div class="dropdown">
+                  <a class="dropdown-toggle" class="card-link" type="button" data-toggle="dropdown" style="background-color: transparent; border-color: transparent; color: black">
+                  Followings</a>
+                 <ul class="dropdown-menu" style="width: 300px; max-height: 300px; overflow: scroll;">
+                   <li style="margin: 10px">                         
+                    <% for (var q = 0; q < followings.length;  q++){ %>
+                         <a class="card-link" href="">
+                         <h6 class="card-title">
+                         <%=followings[q].name%>
+                         </h6>
+                         </a>
+                         <hr>                        
+                   <% } %>
+                   </li>     
+                 </ul>
+
+                </div>
                 <div class="h5"><%=userDetails.followingsCount%></div>
               </li>
               <li class="list-group-item"><%=userDetails.accountType%></li>
@@ -224,8 +256,8 @@
 
 
 
-          <!--- \\\\\\\Post-->
-          <% for (var i =0; i < tweets.length;  i++ ) {%>        
+          <!--Post-->
+          <% for(i = 0; i < tweets.length;  i++) {%>        
           <div class="card gedf-card">
             <div class="card-header">
               <div class="d-flex justify-content-between align-items-center">
@@ -239,12 +271,28 @@
                     />
                   </div>
                   <div class="ml-2">
-                    <div class="h5 m-0"><%=tweets[i].username%></div>
+                    <div class="h5 m-0"  style="display:inline"><%=tweets[i].username%></div>
+                    <div  style="display:inline; padding-left:10px">
+                      <a href="/home/follow?following_user_id=<%=tweets[i].user_id%>" id="follow<%=tweets[i].tweet_id%>" class="card-link" style="border: solid 1px; border-radius:20px; padding:5px">follow</a>
+                    </div>
+                    <% for (var q = 0; q < followings.length;  q++){%> 
+                      <% if (followings[q].id == tweets[i].user_id){%>
+                        <script>
+                          var follow = document.getElementById("follow<%=tweets[i].tweet_id%>");
+                          follow.text = "unfollow";
+                        </script>
+                      <%break;}%>  
+                    <%}%>
+                    <% if (tweets[i].user_id == userDetails.user_id){%>
+                        <script>
+                          var follow = document.getElementById("follow<%=tweets[i].tweet_id%>");
+                          follow.remove();
+                        </script>
+                    <%}%>  
                     <div class="h7 text-muted"><%=tweets[i].fullname%></div>
                   </div>
                 </div>
                 <div>
-                 
                 </div>
               </div>
             </div>
@@ -280,6 +328,22 @@
                               <a class="dropdown-toggle" class="card-link" type="button" data-toggle="dropdown" style="background-color: transparent; border-color: transparent; color: #1c94e6">
                                 <i class="fa fa-comment">Comments</i></a>
                               <ul class="dropdown-menu" style="width: 500px; max-height: 300px; overflow: scroll;">
+                                     <li style="margin: 10px">
+                                         <input type="hidden" name="tweet_id" value="<%=tweets[i].tweet_id%>">
+                                          <textarea
+                                                name="newComment"
+                                                class="form-control"
+                                                id="message"
+                                                rows="1"
+                                                placeholder="What are you thinking?"
+                                                 maxlength="280"
+                                              ></textarea>
+                                        </li>
+                                        <li style="margin: 10px">
+                                         <div class="btn-group">
+                                              <button type="submit" class="btn btn-primary">share</button>
+                                          </div>
+                                        </li>
                                      <li style="margin: 10px">                         
                                         <% for (var j = 0; j < comments.length;  j++){ %>
                                            <% if (tweets[i].tweet_id.toString() == comments[j].comTweetId.toString() ){ %>
@@ -295,39 +359,41 @@
                                            <% } %>
                                           <% } %>
                                         </li>
-                                        <li style="margin: 10px">
-                                         <input type="hidden" name="tweet_id" value="<%=tweets[i].tweet_id%>">
-                                          <textarea
-                                                name="newComment"
-                                                class="form-control"
-                                                id="message"
-                                                rows="3"
-                                                placeholder="What are you thinking?"
-                                                 maxlength="280"
-                                              ></textarea>
-                                        </li>
-                                        <li style="margin: 10px">
-                                         <div class="btn-group">
-                                              <button type="submit" class="btn btn-primary">share</button>
-                                          </div>
-                                        </li>
                                       </ul>
                                     </div>  
                                     </from>                        
       
              <a href="/home/retweet?tweet_id=<%=tweets[i].tweet_id%>&tweetText=<%=tweets[i].text%>" class="card-link" style="margin-left:30px;"><i class="fa fa-mail-forward">Retweet</i></a>
              </div>
-           </div>
+           </div>   
           <% } %>
         </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div class="col-md-3">
-          <% for (var m = 0; m < trends.length;  m++ ) {%> 
+          <% for (var m = 0; m < trends.length; m++) {%> 
           <div class="card gedf-card">
             <div class="card-body">
               <h5 class="card-title"><%=trends[m].username%></h5>
-              <h6 class="card-subtitle mb-2 text-muted"><%=(trends[m].text).substring(0, 10)%></h6>
-              <i class="fa fa-clock-o"><%=(trends[m].time).toString().substring(0, (trends[m].time).toString().length - 34)%></i>
+              <h6 class="card-subtitle mb-2 text-muted"><%=trends[m].fullname%></h6><hr>
+              <h6><i class="fa fa-clock-o"><%=(trends[m].time).toString().substring(0, (trends[m].time).toString().length - 34)%></i></h6>
               <p class="card-text">
                <%=trends[m].text%>
               </p>
